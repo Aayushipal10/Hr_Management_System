@@ -1,19 +1,39 @@
-import React from 'react'
+import axios from 'axios'
+import React ,{useState} from 'react'
+import { login } from '../../../server/controllers/authController'
 
 const Login = () => {
   const [email , setEmail] = useState('')
   const [password , setPassword] = useState('')
+  const [error , setError] = useState(null)
+  const {Login} = useAuth()
+  const navigate = useNavigate() 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
      try{
       const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
+        "http://localhost:5000/api/auth/login",
         {email,password}
       );
-      console.log(response)
+    if(response.data.success){
+      login(response.data.user)
+      localStorage.setItem("token" , response.data.token)
+      if(response.data.user.role == 'admin'){
+        navigate('/admin-dashboard')
+      } else{
+        navigate('/employee-dashboard')
+      }
+    }
+
      }catch(error){
-console.log(error)
-     }
+        if(error.response && !error.response.data.success)
+          {
+            setError(error.response.data.error)
+          }else{
+            setError("server error")
+          }
+        }
   }
 
   return(
@@ -21,6 +41,7 @@ console.log(error)
       <h2 className="font-Pacific text-3xl text-white">HR Managment System</h2>
       <div className="border shadow p-6 w-80 bg-white">
       <h2 className="text-2x1 font-bold mb-4">Login</h2>
+      {error && <p className="text-red-500">{error}  </p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700">Email</label>
@@ -28,13 +49,13 @@ console.log(error)
           className="w-full px-2 border"
           placeholder="Enter Email" 
           onChange={(e) => setEmail(e.target.value)}
-          ></input>
+          required></input>
         </div>
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700">Password</label>
           <input type="password" className="w-full px-3 py-2 border" placeholder="********" 
-          onChange={(e) => setEmail(e.target.value)}
-          ></input>
+          onChange={(e) => setPassword(e.target.value)}
+           required></input>
         </div>
         <div className="mb-4 flex items-center justify-between">
           <label className="inline-flex itmes-center"> <input type="checkbox" className="form-checkbox"/><span className="ml-2 text-grey-700">Remember me </span> 
